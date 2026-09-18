@@ -45,4 +45,18 @@ export default App
 
    );
   };
-//29.32
+
+/*
+git status
+
+# 2. Stage your files
+git add .
+
+# 3. Check again to ensure the correct files are green (staged)
+git status
+
+# 4. Commit and push safely
+git commit -m "Your commit message"
+git push
+*/
+//44.00

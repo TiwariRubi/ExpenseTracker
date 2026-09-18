@@ -39,7 +39,7 @@ const Login = () => {
       onChange={({target})=>setEmail(target.value)}
       label="Email Address"
       placeholder="john@example.com"
-      type="email"
+      type="text"
       />
        <Input
       value={password}
