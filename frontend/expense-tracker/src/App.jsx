@@ -34,7 +34,7 @@ const App = () => {
 export default App
  const Root = () => {
   //check if token exists in local storage
-  const Aunthenticated = !!localStorage.getItem("token");
+  const isAuthenticated = !!localStorage.getItem("token");
 
   //Redirect to dashboard if authenticated, else redirect to login
   return isAuthenticated ? (
@@ -45,4 +45,4 @@ export default App
 
    );
   };
-//13.25
+//29.32
