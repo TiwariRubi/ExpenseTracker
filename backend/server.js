@@ -6,7 +6,7 @@ const connectDB=require("./config/db");
 const authRoutes=require("./routes/authRoutes");
 const incomeRoutes = require("./routes/incomeRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
-const dashbordRoutes = require("./routes/dashboardRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const app=express();
 
 //middleware to handle cors
