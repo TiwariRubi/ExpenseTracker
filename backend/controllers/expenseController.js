@@ -64,6 +64,11 @@ exports.downloadExpenseExcel = async (req, res) => {
       }));
       const wb=xlsx.utils.book_new();
       const ws =xlsx.utils.json_to_sheet(data);
+      ws['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 18 }];
+      for (let row = 2; row <= expense.length + 1; row++) {
+        const dateCell = ws[`C${row}`];
+        if (dateCell) dateCell.z = 'dd/mm/yyyy';
+      }
       xlsx.utils.book_append_sheet(wb, ws, "Expense");
       xlsx.writeFile(wb, 'expense_details.xlsx');
       res.download('expense_details.xlsx');

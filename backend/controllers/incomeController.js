@@ -64,6 +64,11 @@ exports.downloadIncomeExcel = async (req, res) => {
       }));
       const wb=xlsx.utils.book_new();
       const ws =xlsx.utils.json_to_sheet(data);
+      ws['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 18 }];
+      for (let row = 2; row <= income.length + 1; row++) {
+        const dateCell = ws[`C${row}`];
+        if (dateCell) dateCell.z = 'dd/mm/yyyy';
+      }
       xlsx.utils.book_append_sheet(wb, ws, "Income");
       xlsx.writeFile(wb, 'income_details.xlsx');
       res.download('income_details.xlsx');
