@@ -6,7 +6,8 @@
   "scripts": {
      "start": "node server.js",
      "dev": "nodemon server.js",
-     "migrate:expense-categories": "node scripts/normalizeExpenseCategories.js"
+     "migrate:expense-categories": "node scripts/normalizeExpenseCategories.js",
+     "migrate:budget-custom-categories": "node scripts/migrateBudgetCustomCategories.js"
   },
   "keywords": [],
   "author": "",

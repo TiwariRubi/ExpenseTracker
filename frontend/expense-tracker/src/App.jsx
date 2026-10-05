@@ -10,6 +10,7 @@ import SignUp from "./pages/Auth/SignUp";
 import Home from "./pages/Dashboard/Home";
 import Income from "./pages/Dashboard/Income";
 import Expense from "./pages/Dashboard/Expense";
+import Budget from "./pages/Dashboard/Budget";
 import UserProvider from './context/UserContext';
 import toast, {Toaster} from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -35,6 +36,9 @@ const App = () => {
           } />
           <Route path="/expense" element={
             <ProtectedRoute><Expense /></ProtectedRoute>
+          } />
+          <Route path="/budget" element={
+            <ProtectedRoute><Budget /></ProtectedRoute>
           } />
 
        </Routes>

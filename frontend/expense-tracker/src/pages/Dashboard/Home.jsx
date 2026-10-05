@@ -14,6 +14,7 @@ import ExpenseTransactions from '../../components/Dashboard/ExpenseTransactions'
 import Last30DaysExpenses from '../../components/Dashboard/Last30DaysExpenses';
 import RecentIncomeWithChart from '../../components/Dashboard/RecentIncomeWithChart';
 import RecentIncome from '../../components/Dashboard/RecentIncome';
+import BudgetSummary from '../../components/Dashboard/BudgetSummary';
 
 const Home = () => {
   useUserAuth();
@@ -100,6 +101,9 @@ const Home = () => {
                   transactions={dashboardData?.last60DaysIncome?.transactions || []}
                   onSeeMore={() => navigate("/income") }
                />
+        </div>
+        <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <BudgetSummary onSeeAll={() => navigate("/budget")} />
         </div>
       </div>
    </DashboardLayout>

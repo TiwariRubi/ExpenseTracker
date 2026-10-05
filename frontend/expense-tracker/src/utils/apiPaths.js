@@ -28,6 +28,13 @@ export const API_PATHS ={
     DELETE_EXPENSE: (expenseId) =>`/api/v1/expense/${expenseId}` ,
     DOWNLOAD_EXPENSE: `/api/v1/expense/downloadexcel` ,
   },
+  BUDGET: {
+    GET_ALL: "/api/v1/budget",
+    GET_STATUS: "/api/v1/budget/status",
+    ADD: "/api/v1/budget",
+    UPDATE: (budgetId) => `/api/v1/budget/${budgetId}`,
+    DELETE: (budgetId) => `/api/v1/budget/${budgetId}`,
+  },
   IMAGE: {
     UPLOAD_IMAGE: "/api/v1/auth/upload-image",
   },
