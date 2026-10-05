@@ -1,18 +1,21 @@
 import React from 'react'
 import {
-  LuUtensils,
+  LuIndianRupee,
   LuTrendingUp,
   LuTrendingDown,
   LuTrash2,
+  LuPencil,
 } from "react-icons/lu";
 
 const TransactionInfoCard = ({
   title,
+  description,
   icon,
   date,
   amount,
   type,
   hideDeleteBtn,
+  onEdit,
   onDelete,
 }) => {
   const getAmountStyles = () =>
@@ -25,19 +28,34 @@ const TransactionInfoCard = ({
         <img src={icon} alt={title} className="w-6 h-6 " />
 
       ) : (
-        <LuUtensils />
+        <LuIndianRupee />
       )}
 
     </div>
       <div className="flex-1 flex items-center justify-between">
          <div>
            <p className="text-sm text-gray-700 font-medium ">{title}</p>
+           {description && (
+            <p className="text-xs text-gray-500 mt-1">{description}</p>
+           )}
            <p className="text-xs text-gray-400 mt-1">{date}</p>
          </div>
          <div className="flex items-center gap-2">
+          {!hideDeleteBtn && onEdit && (
+            <button
+              aria-label={`Edit ${title}`}
+              className="text-gray-400 hover:text-purple-500 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer"
+              onClick={onEdit}
+            >
+              <LuPencil size={18} />
+            </button>
+          )}
           {!hideDeleteBtn && onDelete && (
-            <button className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer "
-            onClick={onDelete}>
+            <button
+              aria-label={`Delete ${title}`}
+              className="text-gray-400 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer"
+              onClick={onDelete}
+            >
               <LuTrash2 size={18} />
             </button>
           )}
@@ -46,7 +64,7 @@ const TransactionInfoCard = ({
            className={`flex items-center gap-2 px-3 py-1.5 rounded-md ${getAmountStyles()}`}
           >
             <h6 className="text-xs font-medium">
-              {type === "income" ? "+" : "-"}${amount}
+              {type === "income" ? "+" : "-"}₹{amount}
             </h6>
             {type==="income" ? <LuTrendingUp /> : <LuTrendingDown />}
           </div>

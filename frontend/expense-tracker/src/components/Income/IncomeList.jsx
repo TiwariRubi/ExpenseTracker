@@ -2,7 +2,20 @@ import React from 'react'
 import TransactionInfoCard from '../Cards/TransactionInfoCard'
 import moment from 'moment'
 import { LuDownload } from 'react-icons/lu'
-const IncomeList = ({transactions, onDelete, onDownload}) => {
+import TransactionFilters from '../TransactionFilters'
+const IncomeList = ({
+  transactions,
+  loading,
+  filters,
+  searchValue,
+  categoryOptions,
+  onSearchChange,
+  onFilterChange,
+  onClearFilters,
+  onDelete,
+  onEdit,
+  onDownload,
+}) => {
 
   return (
     <div className="card">
@@ -12,15 +25,29 @@ const IncomeList = ({transactions, onDelete, onDownload}) => {
           <LuDownload className="text-base" />Download
         </button>
       </div> 
+      <TransactionFilters
+        filters={filters}
+        searchValue={searchValue}
+        categoryOptions={categoryOptions}
+        categoryLabel="Source"
+        allLabel="All sources"
+        searchLabel="Search source or description"
+        onSearchChange={onSearchChange}
+        onFilterChange={onFilterChange}
+        onClear={onClearFilters}
+      />
+      {loading && <p className="mt-3 text-sm text-gray-400">Loading income...</p>}
       <div className="grid grid-cols-1 md:grid-cols-2">
         {transactions?.map((income) =>(
           <TransactionInfoCard
           key={income._id}
           title={income.source}
+          description={income.description}
           icon={income.icon}
           date={moment(income.date).format("Do MMM YYYY")}
           amount={income.amount}
           type="income"
+          onEdit={()=> onEdit(income)}
           onDelete={()=> onDelete(income._id)}
           />
         ))}

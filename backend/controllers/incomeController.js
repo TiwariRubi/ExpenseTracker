@@ -1,22 +1,30 @@
 const xlsx= require('xlsx');
+const mongoose = require("mongoose");
 const Income = require("../models/Income");
+const buildTransactionFilters = require("../utils/transactionFilters");
 
 //Add Income Source
 exports.addIncome = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const { icon, source, amount, date } = req.body;
+    const { icon, source, amount, date, description } = req.body || {};
 
     // Validation : check for missing fields
     if (!source || !amount || !date) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    if (description !== undefined &&
+        (typeof description !== "string" || description.trim().length > 100)) {
+      return res.status(400).json({ message: "Description must be 100 characters or fewer" });
+    }
+
     const newIncome = new Income({
       userId,
       icon,
       source,
+      description: description === undefined ? "" : description.trim(),
       amount,
       date: new Date(date)
     });
@@ -28,13 +36,85 @@ exports.addIncome = async (req, res) => {
   }
 };
 
+// Update Income
+exports.updateIncome = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const { icon, source, amount, date, description } = req.body || {};
+
+    if (typeof source !== "string" || !source.trim() || !amount || !date) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (description !== undefined &&
+        (typeof description !== "string" || description.trim().length > 100)) {
+      return res.status(400).json({ message: "Description must be 100 characters or fewer" });
+    }
+
+    if ((typeof amount !== "number" && typeof amount !== "string") ||
+        (typeof amount === "string" && !amount.trim()) ||
+        typeof date !== "string") {
+      return res.status(400).json({ message: "Invalid income details" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid income id" });
+    }
+
+    if (icon !== undefined && typeof icon !== "string") {
+      return res.status(400).json({ message: "Invalid income details" });
+    }
+
+    const incomeAmount = Number(amount);
+    const incomeDate = new Date(date);
+
+    if (!Number.isFinite(incomeAmount) || incomeAmount <= 0 || Number.isNaN(incomeDate.getTime())) {
+      return res.status(400).json({ message: "Invalid income details" });
+    }
+
+    const incomeDetails = {
+      icon,
+      source: source.trim(),
+      amount: incomeAmount,
+      date: incomeDate,
+    };
+    if (description !== undefined) {
+      incomeDetails.description = description.trim();
+    }
+
+    const income = await Income.findOneAndUpdate(
+      { _id: req.params.id, userId },
+      incomeDetails,
+      { new: true, runValidators: true }
+    );
+
+    if (!income) {
+      return res.status(404).json({ message: "Income not found" });
+    }
+
+    res.status(200).json(income);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 // Get All Income Source
 exports.getAllIncome = async (req, res) => {
      const userId =req.user.id;
      try{
-      const income = await Income.find({ userId }).sort({ date: -1 });
+      const filters = buildTransactionFilters(
+        userId,
+        req.query,
+        ["source", "description"],
+        "source"
+      );
+      const income = await Income.find(filters).sort({ date: -1 });
       res.json(income);
      } catch (error){
+      if (error.statusCode === 400) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: "Server Error"});
      }
 };

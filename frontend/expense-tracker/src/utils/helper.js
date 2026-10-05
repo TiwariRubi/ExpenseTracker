@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { getCategoryLabel } from '../../../../shared/categoryHelpers.mjs';
 
 export const validateEmail=(email)=>{
   const regex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -29,11 +30,26 @@ export const addThousandsSeparator=(num)=>{
 };
 
 export const prepareExpenseBarChartData =(data=[])=>{
-  const chartData =data.map((item)=>({
-    category: item?.category,
-    amount: item?.amount,
-  }));
-  return chartData;
+  const categoryTotals = new Map();
+
+  data.forEach((item) => {
+    const categoryLabel = getCategoryLabel(item);
+    const categoryKey = categoryLabel.toLocaleLowerCase();
+    const existingCategory = categoryTotals.get(categoryKey);
+
+    if (existingCategory) {
+      existingCategory.amount += item?.amount || 0;
+    } else {
+      categoryTotals.set(categoryKey, {
+        category: categoryLabel,
+        categoryType: item?.category,
+        customCategory: item?.customCategory || "",
+        amount: item?.amount || 0,
+      });
+    }
+  });
+
+  return [...categoryTotals.values()];
 };
 
 export const prepareIncomeBarChartData = (data=[]) =>{
@@ -57,7 +73,8 @@ export const prepareExpenseLineChartData =(data = []) => {
   const chartData = sortedData.map((item)=>({
     month: moment(item?.date).format('Do MMM'),
     amount: item?.amount,
-    category: item?.category,
+    category: getCategoryLabel(item),
+    categoryType: item?.category,
   }));
   return chartData;
 }
