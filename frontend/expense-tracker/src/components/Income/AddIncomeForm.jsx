@@ -2,7 +2,7 @@ import React,{useState} from 'react'
 import Input from '../Inputs/Input';
 import EmojiPickerPopup from '../EmojiPickerPopup';
 
-const AddIncomeForm = ({onAddIncome, incomeToEdit}) => {
+const AddIncomeForm = ({onAddIncome, incomeToEdit, sourceSuggestions = []}) => {
      const [income, setIncome] = useState(() => incomeToEdit ? {
       source: incomeToEdit.source,
       amount: incomeToEdit.amount,
@@ -30,7 +30,13 @@ const AddIncomeForm = ({onAddIncome, incomeToEdit}) => {
          label="Income Source"
          placeholder="Freelance, Salary, etc"
          type="text"
+         list="income-source-suggestions"
       />
+      <datalist id="income-source-suggestions">
+        {sourceSuggestions.map((source) => (
+          <option key={source} value={source} />
+        ))}
+      </datalist>
       <Input
         value={income.description}
         onChange={({target}) => handleChange("description", target.value.slice(0, 100))}

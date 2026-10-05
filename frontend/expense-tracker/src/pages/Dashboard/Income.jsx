@@ -15,6 +15,7 @@ const Income = () => {
     const [incomeData, setIncomeData]= useState([]);
     const [loading, setLoading] = useState(false);
     const [incomeSources, setIncomeSources] = useState([]);
+    const [sourceSuggestions, setSourceSuggestions] = useState([]);
     const [filters, setFilters] = useState({
       search: "",
       category: "",
@@ -53,6 +54,35 @@ const Income = () => {
     };
 
     useEffect(() => () => clearTimeout(searchTimer.current), []);
+
+    useEffect(() => {
+      if (!openAddIncomeModal) return;
+
+      const controller = new AbortController();
+      const fetchIncomeSourceSuggestions = async () => {
+        try {
+          const response = await axiosInstance.get(
+            API_PATHS.INCOME.GET_INCOME_SOURCE_SUGGESTIONS,
+            { signal: controller.signal }
+          );
+          if (!Array.isArray(response.data)) {
+            throw new Error("Invalid income source suggestions response");
+          }
+          setSourceSuggestions(response.data);
+        } catch (error) {
+          if (!controller.signal.aborted) {
+            console.error(
+              "Error fetching income source suggestions:",
+              error.response?.data?.message || error.message
+            );
+            toast.error(error.response?.data?.message || "Unable to load income source suggestions.");
+          }
+        }
+      };
+
+      fetchIncomeSourceSuggestions();
+      return () => controller.abort();
+    }, [openAddIncomeModal]);
 
     useEffect(() => {
       const controller = new AbortController();
@@ -226,7 +256,11 @@ const Income = () => {
           title={incomeToEdit ? "Edit Income" : "Add Income"}
         >
       
-      <AddIncomeForm onAddIncome={handleAddIncome} incomeToEdit={incomeToEdit} />
+      <AddIncomeForm
+        onAddIncome={handleAddIncome}
+        incomeToEdit={incomeToEdit}
+        sourceSuggestions={sourceSuggestions}
+      />
 
         </Modal>
         <Modal

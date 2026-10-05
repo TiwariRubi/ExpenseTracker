@@ -3,6 +3,12 @@ const mongoose = require("mongoose");
 const Income = require("../models/Income");
 const buildTransactionFilters = require("../utils/transactionFilters");
 
+const normalizeSource = (source) => source.trim().replace(/\s+/g, " ");
+const formatSourceLabel = (source) => normalizeSource(source)
+  .split(" ")
+  .map((word) => word.charAt(0).toLocaleUpperCase() + word.slice(1).toLocaleLowerCase())
+  .join(" ");
+
 //Add Income Source
 exports.addIncome = async (req, res) => {
   const userId = req.user.id;
@@ -11,7 +17,7 @@ exports.addIncome = async (req, res) => {
     const { icon, source, amount, date, description } = req.body || {};
 
     // Validation : check for missing fields
-    if (!source || !amount || !date) {
+    if (typeof source !== "string" || !normalizeSource(source) || !amount || !date) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -23,7 +29,7 @@ exports.addIncome = async (req, res) => {
     const newIncome = new Income({
       userId,
       icon,
-      source,
+      source: normalizeSource(source),
       description: description === undefined ? "" : description.trim(),
       amount,
       date: new Date(date)
@@ -75,7 +81,7 @@ exports.updateIncome = async (req, res) => {
 
     const incomeDetails = {
       icon,
-      source: source.trim(),
+      source: normalizeSource(source),
       amount: incomeAmount,
       date: incomeDate,
     };
@@ -117,6 +123,27 @@ exports.getAllIncome = async (req, res) => {
       }
       res.status(500).json({ message: "Server Error"});
      }
+};
+
+// Get Income Source Suggestions
+exports.getIncomeSourceSuggestions = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const sources = await Income.distinct("source", { userId });
+    const uniqueSources = new Map();
+
+    sources.forEach((source) => {
+      if (typeof source === "string" && normalizeSource(source)) {
+        const normalizedSource = formatSourceLabel(source);
+        uniqueSources.set(normalizedSource.toLocaleLowerCase(), normalizedSource);
+      }
+    });
+
+    res.json([...uniqueSources.values()].sort((first, second) => first.localeCompare(second)));
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
 };
 
 // Delete Income Source

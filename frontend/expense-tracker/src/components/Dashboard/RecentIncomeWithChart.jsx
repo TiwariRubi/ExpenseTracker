@@ -1,21 +1,11 @@
-import React, {useEffect, useState} from 'react'
+import React from 'react';
 import CustomPieChart from '../../components/Charts/CustomPieChart'
+import { prepareIncomeSourceChartData } from '../../utils/helper';
 
 const COLORS =["#875CF5", "#FA2C37", "#FF6900", "#4f39f6"];
 
 const RecentIncomeWithChart = ({data, totalIncome}) => {
-    const [charData, setCharData]= useState([]);
-    const prepareCharData=()=>{
-      const dataArr= data?.map((item)=>({
-        name: item.source,
-        amount: item?.amount,
-      }));
-      setCharData(dataArr);
-    };
-    useEffect(()=>{
-      prepareCharData();
-      return ()=>{};
-    }, [data]);
+    const charData = prepareIncomeSourceChartData(data);
 
   return (
     <div className="card">

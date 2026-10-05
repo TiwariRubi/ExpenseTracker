@@ -68,6 +68,37 @@ export const prepareIncomeBarChartData = (data=[]) =>{
   return chartData;
 };
 
+export const formatIncomeSourceLabel = (source = "") =>
+  source
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toLocaleUpperCase() + word.slice(1).toLocaleLowerCase())
+    .join(" ");
+
+export const prepareIncomeSourceChartData = (data = []) => {
+  const sourceTotals = new Map();
+
+  data.forEach((item) => {
+    const source = formatIncomeSourceLabel(item?.source || "");
+    if (!source) return;
+
+    const sourceKey = source.toLocaleLowerCase();
+    const existingSource = sourceTotals.get(sourceKey);
+
+    if (existingSource) {
+      existingSource.amount += item?.amount || 0;
+    } else {
+      sourceTotals.set(sourceKey, {
+        name: source,
+        amount: item?.amount || 0,
+      });
+    }
+  });
+
+  return [...sourceTotals.values()];
+};
+
 export const prepareExpenseLineChartData =(data = []) => {
   const sortedData =[...data].sort((a,b)=> new Date(a.date)  - new Date(b.date));
   const chartData = sortedData.map((item)=>({

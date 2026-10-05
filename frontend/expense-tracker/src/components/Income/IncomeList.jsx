@@ -3,6 +3,7 @@ import TransactionInfoCard from '../Cards/TransactionInfoCard'
 import moment from 'moment'
 import { LuDownload } from 'react-icons/lu'
 import TransactionFilters from '../TransactionFilters'
+import { formatIncomeSourceLabel } from '../../utils/helper'
 const IncomeList = ({
   transactions,
   loading,
@@ -41,7 +42,7 @@ const IncomeList = ({
         {transactions?.map((income) =>(
           <TransactionInfoCard
           key={income._id}
-          title={income.source}
+          title={formatIncomeSourceLabel(income.source)}
           description={income.description}
           icon={income.icon}
           date={moment(income.date).format("Do MMM YYYY")}

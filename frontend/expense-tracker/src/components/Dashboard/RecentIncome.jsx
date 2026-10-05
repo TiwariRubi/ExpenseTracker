@@ -2,6 +2,7 @@ import React from 'react'
 import { LuArrowRight } from "react-icons/lu";
 import TransactionInfoCard from '../Cards/TransactionInfoCard';
 import moment from 'moment';
+import { formatIncomeSourceLabel } from '../../utils/helper'
 const RecentIncome = ({ transactions = [], onSeeMore }) => {
   return (
    <div className="card">
@@ -15,7 +16,7 @@ const RecentIncome = ({ transactions = [], onSeeMore }) => {
        {transactions?.slice(0,5)?.map((item)=> (
         <TransactionInfoCard
           key={item._id}
-          title={item.source}
+          title={formatIncomeSourceLabel(item.source)}
           description={item.description}
           icon={item.icon}
           date={moment(item.date).format("Do MMM YYYY")}
