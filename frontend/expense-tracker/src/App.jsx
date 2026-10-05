@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useEffect} from 'react'
 import{
   BrowserRouter as Router,
   Routes,
@@ -11,19 +11,31 @@ import Home from "./pages/Dashboard/Home";
 import Income from "./pages/Dashboard/Income";
 import Expense from "./pages/Dashboard/Expense";
 import UserProvider from './context/UserContext';
-import {Toaster} from 'react-hot-toast';
+import toast, {Toaster} from 'react-hot-toast';
+import ProtectedRoute from './components/ProtectedRoute';
 const App = () => { 
   return (
     <UserProvider>
    <div>
      <Router>
+       <SessionExpiryNotice />
        <Routes>
           <Route path="/" element={<Root />} />
-          <Route path="/login" exact element={<Login />} />
-          <Route path="/signUp" exact element={<SignUp />} />
-          <Route path="/dashboard" exact element={<Home />} />
-          <Route path="/income" exact element={<Income />} />
-          <Route path="/expense" exact element={<Expense />} />
+          <Route path="/login" element={
+            <ProtectedRoute guestOnly><Login /></ProtectedRoute>
+          } />
+          <Route path="/signup" element={
+            <ProtectedRoute guestOnly><SignUp /></ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute><Home /></ProtectedRoute>
+          } />
+          <Route path="/income" element={
+            <ProtectedRoute><Income /></ProtectedRoute>
+          } />
+          <Route path="/expense" element={
+            <ProtectedRoute><Expense /></ProtectedRoute>
+          } />
 
        </Routes>
 
@@ -50,16 +62,37 @@ const App = () => {
 };
 
 export default App
+
+const SessionExpiryNotice = () => {
+  useEffect(() => {
+    const showSessionExpiredMessage = () => {
+      if (window.location.pathname !== "/login") return;
+
+      const message = sessionStorage.getItem("sessionExpiredMessage");
+      if (message) {
+        sessionStorage.removeItem("sessionExpiredMessage");
+        toast.error(message);
+      }
+    };
+
+    showSessionExpiredMessage();
+    window.addEventListener("auth:session-expired-notice", showSessionExpiredMessage);
+    return () => window.removeEventListener("auth:session-expired-notice", showSessionExpiredMessage);
+  }, []);
+
+  return null;
+};
+
  const Root = () => {
   //check if token exists in local storage
   const isAuthenticated = !!localStorage.getItem("token");
 
   //Redirect to dashboard if authenticated, else redirect to login
   return isAuthenticated ? (
-   <Navigate to="/dashboard" />
+   <Navigate to="/dashboard" replace />
    ) : (
 
-    <Navigate to="/login" />
+    <Navigate to="/login" replace />
 
    );
   };
