@@ -13,6 +13,8 @@ export const API_PATHS ={
   INCOME: {
     ADD_INCOME: "/api/v1/income/add",
     GET_ALL_INCOME: "/api/v1/income/get",
+    GET_INCOME_SOURCE_SUGGESTIONS: "/api/v1/income/source-suggestions",
+    UPDATE_INCOME: (incomeId) => `/api/v1/income/${incomeId}`,
     DELETE_INCOME: (incomeId)=> `/api/v1/income/${incomeId}` ,
     DOWNLOAD_INCOME: `/api/v1/income/downloadexcel`,
 
@@ -21,6 +23,8 @@ export const API_PATHS ={
   EXPENSE: {
     ADD_EXPENSE: "/api/v1/expense/add",
     GET_ALL_EXPENSE: "/api/v1/expense/get",
+    GET_CUSTOM_EXPENSE_CATEGORIES: "/api/v1/expense/custom-categories",
+    UPDATE_EXPENSE: (expenseId) => `/api/v1/expense/${expenseId}`,
     DELETE_EXPENSE: (expenseId) =>`/api/v1/expense/${expenseId}` ,
     DOWNLOAD_EXPENSE: `/api/v1/expense/downloadexcel` ,
   },

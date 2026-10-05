@@ -1,4 +1,6 @@
 import React from 'react'
+import expenseCategories from '../../../../../shared/expenseCategories.json'
+import { getCategoryLabel } from '../../../../../shared/categoryHelpers.mjs'
 
 import {
   BarChart,
@@ -7,22 +9,30 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   Cell,
 } from "recharts";
 
 const CustomBarChart = ({data}) => {
   // function to alternate colors
-   const getBarColor=(index) =>{
-    return index%2===0 ? "#875cf5" : "#cfbefb";
+   const getBarColor=(category, index) =>{
+    const expenseCategory = expenseCategories.find((item) => item.name === category);
+    return expenseCategory ? expenseCategory.color : index%2===0 ? "#875cf5" : "#cfbefb";
    };
    const CustomTooltip =({active, payload})=>{
     if(active && payload && payload.length){
+      const expenseCategory = expenseCategories.find(
+        (category) => category.name === payload[0].payload.categoryType
+      );
       return (
         <div className="bg-white shadow-md rounded-lg p-2 border border-gray-300">
+          {expenseCategory && (
+            <p className="text-xs font-semibold text-purple-800 mb-1">
+              {expenseCategory.icon} {getCategoryLabel(payload[0].payload)}
+            </p>
+          )}
           <p className="text-sm text-gray-600">
-            Amount: <span className="text-sm font-medium text-gray-900">${payload[0].payload.amount}</span>
+            Amount: <span className="text-sm font-medium text-gray-900">₹{payload[0].payload.amount}</span>
           </p>
         </div>
       );
@@ -44,7 +54,7 @@ const CustomBarChart = ({data}) => {
             activeStyle={{fill: "green"}}
           >
             {data.map((entry, index)=>(
-              <Cell key={index} fill={getBarColor(index)} />
+              <Cell key={index} fill={getBarColor(entry.categoryType, index)} />
             ))}
           </Bar>
         </BarChart>

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import toast from 'react-hot-toast'
 import { useUserAuth } from '../../hooks/useUserAuth'
 import DashboardLayout from '../../components/layouts/DashboardLayout';
@@ -9,48 +9,121 @@ import DeleteAlert from '../../components/DeleteAlert';
 import Modal from '../../components/Modal';
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/apiPaths';
+import expenseCategories from '../../../../../shared/expenseCategories.json';
 const Expense = () => {
   useUserAuth();
 
    const [expenseData, setExpenseData]= useState([]);
       const [loading, setLoading] = useState(false);
+      const [filters, setFilters] = useState({
+        search: "",
+        category: "",
+        from: "",
+        to: "",
+        minAmount: "",
+        maxAmount: "",
+      });
+      const [searchValue, setSearchValue] = useState("");
+      const [refreshData, setRefreshData] = useState(0);
+      const [customCategories, setCustomCategories] = useState([]);
+      const searchTimer = useRef(null);
       const [openDeleteAlert, setOpenDeleteAlert]= useState({
         show: false,
         data: null,
       });
 
       const[openAddExpenseModal, setOpenAddExpenseModal]=useState(false);
+      const [expenseToEdit, setExpenseToEdit] = useState(null);
 
-       //Get all Expense Details
-     
-    const fetchExpenseDetails= async () => {
-      if (loading) return;
-
-      setLoading(true);
-
-      try{
-          const response = await axiosInstance.get(
-          `${API_PATHS.EXPENSE.GET_ALL_EXPENSE}`
-        );
-         if(response.data){
-          setExpenseData(response.data);
-
-         }
-
-      } catch (error){
-        console.log("Something went wrong. Please try again.", error);
-      } finally{
-        setLoading(false);
-      }
+    const handleSearchChange = (value) => {
+      setSearchValue(value);
+      clearTimeout(searchTimer.current);
+      searchTimer.current = setTimeout(() => {
+        setFilters((previousFilters) => ({ ...previousFilters, search: value }));
+      }, 300);
     };
+
+    const handleFilterChange = (key, value) => {
+      setFilters((previousFilters) => ({ ...previousFilters, [key]: value }));
+    };
+
+    const clearFilters = () => {
+      clearTimeout(searchTimer.current);
+      setSearchValue("");
+      setFilters({ search: "", category: "", from: "", to: "", minAmount: "", maxAmount: "" });
+    };
+
+    useEffect(() => () => clearTimeout(searchTimer.current), []);
+
+    useEffect(() => {
+      if (!openAddExpenseModal) return;
+
+      const controller = new AbortController();
+      const fetchCustomCategories = async () => {
+        try {
+          const response = await axiosInstance.get(
+            API_PATHS.EXPENSE.GET_CUSTOM_EXPENSE_CATEGORIES,
+            { signal: controller.signal }
+          );
+          if (!Array.isArray(response.data)) {
+            throw new Error("Invalid custom category response");
+          }
+          setCustomCategories(response.data);
+        } catch (error) {
+          if (!controller.signal.aborted) {
+            console.error(
+              "Error fetching custom expense categories:",
+              error.response?.data?.message || error.message
+            );
+            toast.error(error.response?.data?.message || "Unable to load custom categories.");
+          }
+        }
+      };
+
+      fetchCustomCategories();
+      return () => controller.abort();
+    }, [openAddExpenseModal]);
+
+    useEffect(() => {
+      const controller = new AbortController();
+      const fetchExpenseDetails = async () => {
+        setLoading(true);
+
+        try {
+          const response = await axiosInstance.get(API_PATHS.EXPENSE.GET_ALL_EXPENSE, {
+            params: filters,
+            signal: controller.signal,
+          });
+          if (response.data) {
+            setExpenseData(response.data);
+          }
+        } catch (error) {
+          if (!controller.signal.aborted) {
+            console.log("Something went wrong. Please try again.", error);
+            toast.error(error.response?.data?.message || "Unable to filter expenses.");
+          }
+        } finally {
+          if (!controller.signal.aborted) {
+            setLoading(false);
+          }
+        }
+      };
+
+      fetchExpenseDetails();
+      return () => controller.abort();
+    }, [filters, refreshData]);
 
     // Handle Add Expense
     const handleAddExpense = async (expense) => {
-       const {category, amount, date, icon }=expense;
+       const {category, customCategory, amount, date, icon, description }=expense;
 
        //validation  checks
        if(!category.trim()){
         toast.error("Category is required.");
+        return;
+       }
+       if(category === "Other" && !customCategory.trim()){
+        toast.error("Enter your category.");
         return;
        }
        if(!amount || isNaN(amount) || Number(amount) <= 0){
@@ -62,22 +135,43 @@ const Expense = () => {
         return;
        }
        try{
-        await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE,{
+        const expenseDetails = {
           category,
+          customCategory,
           amount,
           date,
           icon,
-        });
+          description,
+        };
+        if (expenseToEdit) {
+          await axiosInstance.put(
+            API_PATHS.EXPENSE.UPDATE_EXPENSE(expenseToEdit._id),
+            expenseDetails
+          );
+        } else {
+          await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE, expenseDetails);
+        }
         setOpenAddExpenseModal(false);
-        toast.success("Expense added successfully");
-        fetchExpenseDetails();
+        setExpenseToEdit(null);
+        toast.success(expenseToEdit ? "Expense updated successfully" : "Expense added successfully");
+        setRefreshData((previousValue) => previousValue + 1);
        }catch (error){
         console.error(
-        "Error adding expense:",
+        expenseToEdit ? "Error updating expense:" : "Error adding expense:",
         error.response?.data?.message || error.message
        );
-      //  toast.error(error.response?.data?.message || "Unable to add expense.");
+        toast.error(error.response?.data?.message || "Unable to save expense.");
        }
+    };
+
+    const handleEditExpense = (expense) => {
+      setExpenseToEdit(expense);
+      setOpenAddExpenseModal(true);
+    };
+
+    const closeExpenseModal = () => {
+      setOpenAddExpenseModal(false);
+      setExpenseToEdit(null);
     };
 
      // Delete Expense
@@ -86,7 +180,7 @@ const Expense = () => {
         await axiosInstance.delete(API_PATHS.EXPENSE.DELETE_EXPENSE(id));
         setOpenDeleteAlert({show: false, data:null});
         toast.success("Expense details deleted successfully");
-        fetchExpenseDetails();
+        setRefreshData((previousValue) => previousValue + 1);
       }catch(error){
         console.error(
           "Error deleting expense:",
@@ -119,14 +213,6 @@ const Expense = () => {
       }
     };
 
-    useEffect(() =>{
-      fetchExpenseDetails()
-      return()=>{
-
-      }
-    },[])
-
-
   return (
   <DashboardLayout activeMenu="Expense">
     <div className="my-5 mx-auto">
@@ -134,24 +220,39 @@ const Expense = () => {
        <div className="">
         <ExpenseOverview
          transactions={expenseData}
-         onExpenseIncome={()=>setOpenAddExpenseModal(true)}
+         onExpenseIncome={()=>{
+          setExpenseToEdit(null);
+          setOpenAddExpenseModal(true);
+         }}
         />
        </div>
        <ExpenseList
          transactions={expenseData}
+       loading={loading}
+        filters={filters}
+        searchValue={searchValue}
+        categoryOptions={expenseCategories.map((category) => category.name)}
+        onSearchChange={handleSearchChange}
+        onFilterChange={handleFilterChange}
+        onClearFilters={clearFilters}
         onDelete={(id)=>{
           setOpenDeleteAlert({show:true,data:id});
         }}
+        onEdit={handleEditExpense}
         onDownload={handleDownloadExpenseDetails}
        />
 
       </div>
       <Modal
        isOpen={openAddExpenseModal}
-       onClose={()=> setOpenAddExpenseModal(false)}
-       title="Add Expense"
+       onClose={closeExpenseModal}
+       title={expenseToEdit ? "Edit Expense" : "Add Expense"}
       >
-        <AddExpenseForm onAddExpense={handleAddExpense} />
+        <AddExpenseForm
+          onAddExpense={handleAddExpense}
+          expenseToEdit={expenseToEdit}
+          customCategories={customCategories}
+        />
 
       </Modal>
        <Modal

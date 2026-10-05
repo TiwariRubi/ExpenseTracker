@@ -2,6 +2,7 @@ import React from 'react'
 import { LuArrowRight } from 'react-icons/lu'
 import TransactionInfoCard from '../../components/Cards/TransactionInfoCard'
 import moment from 'moment'
+import { getCategoryLabel } from '../../../../../shared/categoryHelpers.mjs'
 const ExpenseTransactions = ({transactions, onSeeMore}) => {
   return (
     <div className="card">
@@ -18,7 +19,8 @@ const ExpenseTransactions = ({transactions, onSeeMore}) => {
            {transactions?.slice(0,5)?.map((expense) => (
              <TransactionInfoCard
               key={expense._id}
-              title={expense.category}
+              title={getCategoryLabel(expense)}
+              description={expense.description}
               icon={expense.icon}
               date={moment(expense.date).format("Do MMM YYYY")}
               amount={expense.amount}

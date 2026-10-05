@@ -1,0 +1,12 @@
+[
+  { "name": "Food", "icon": "🍽️", "color": "#875cf5" },
+  { "name": "Groceries", "icon": "🛒", "color": "#cfbefb" },
+  { "name": "Shopping", "icon": "🛍️", "color": "#a78bfa" },
+  { "name": "Transport", "icon": "🚗", "color": "#c4b5fd" },
+  { "name": "Bills", "icon": "🧾", "color": "#7c3aed" },
+  { "name": "Entertainment", "icon": "🎬", "color": "#ddd6fe" },
+  { "name": "Health", "icon": "🩺", "color": "#6d28d9" },
+  { "name": "Education", "icon": "📚", "color": "#ede9fe" },
+  { "name": "Rent", "icon": "🏠", "color": "#8b5cf6" },
+  { "name": "Other", "icon": "📦", "color": "#a1a1aa" }
+]
