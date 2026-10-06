@@ -177,7 +177,7 @@ const Expense = () => {
      // Delete Expense
     const deleteExpense = async(id) => {
       try{
-        await axiosInstance.delete(API_PATHS.EXPENSE.DELETE_EXPENSE(id));
+         await axiosInstance.delete(API_PATHS.EXPENSE.DELETE_EXPENSE(id));
         setOpenDeleteAlert({show: false, data:null});
         toast.success("Expense details deleted successfully");
         setRefreshData((previousValue) => previousValue + 1);
@@ -186,6 +186,7 @@ const Expense = () => {
           "Error deleting expense:",
           error.response?.data?.message || error.message
         );
+        toast.error(error.response?.data?.message || "Unable to delete expense.");
       }
     };
 

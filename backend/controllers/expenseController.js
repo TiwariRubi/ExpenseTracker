@@ -3,7 +3,17 @@ const mongoose = require("mongoose");
 const Expense = require("../models/Expense");
 const expenseCategories = require("../../shared/expenseCategories.json");
 const buildTransactionFilters = require("../utils/transactionFilters");
+const { checkBudgetAfterExpenseChange } = require("../utils/budgetStatus");
+const { notifyBudgetStatus } = require("../utils/notificationService");
 const categoryHelpers = import("../../shared/categoryHelpers.mjs");
+
+const notifyBudgetStatusSafely = async (userId, budgetStatus) => {
+  try {
+    await notifyBudgetStatus(userId, budgetStatus);
+  } catch (error) {
+    console.error("Error creating budget notifications:", error.message);
+  }
+};
 
 const getCustomCategory = (category, customCategory, normalizeCustomCategory) => {
   if (category !== "Other") {
@@ -61,7 +71,9 @@ exports.addExpense = async (req, res) => {
     });
 
     await newExpense.save();
-    res.status(200).json(newExpense);
+    const budgetStatus = await checkBudgetAfterExpenseChange(userId, newExpense);
+    await notifyBudgetStatusSafely(userId, budgetStatus);
+    res.status(200).json({ ...newExpense.toObject(), budgetStatus });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -130,17 +142,26 @@ exports.updateExpense = async (req, res) => {
       expenseDetails.description = description.trim();
     }
 
+    const previousExpense = await Expense.findOne({ _id: req.params.id, userId });
+    if (!previousExpense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+
     const expense = await Expense.findOneAndUpdate(
       { _id: req.params.id, userId },
       expenseDetails,
       { new: true, runValidators: true }
     );
-
     if (!expense) {
       return res.status(404).json({ message: "Expense not found" });
     }
 
-    res.status(200).json(expense);
+    const budgetStatus = await checkBudgetAfterExpenseChange(userId, [
+      previousExpense,
+      expense,
+    ]);
+    await notifyBudgetStatusSafely(userId, budgetStatus);
+    res.status(200).json({ ...expense.toObject(), budgetStatus });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -197,12 +218,22 @@ exports.getCustomExpenseCategories = async (req, res) => {
 
 // Delete Expense Source
 exports.deleteExpense = async (req, res) => {
-   
+   const userId = req.user.id;
+
+   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+     return res.status(400).json({ message: "Invalid expense id" });
+   }
+
    try{
-    await Expense.findByIdAndDelete(req.params.id);
-    res.json({ message:"Expense deleted successfully"});
+    const expense = await Expense.findOneAndDelete({ _id: req.params.id, userId });
+    if (!expense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+    const budgetStatus = await checkBudgetAfterExpenseChange(userId, expense);
+    await notifyBudgetStatusSafely(userId, budgetStatus);
+    res.json({ message:"Expense deleted successfully", budgetStatus });
    }catch(error){
-    res.status(500).json({message:"Server Error"});
+    res.status(500).json({ message: "Server Error", error: error.message });
    }
 };
 
