@@ -122,6 +122,7 @@ const checkBudgetAfterExpenseChange = async (userId, expenses) => {
 
     if (matchingBudget) {
       affectedBudgets.set(String(matchingBudget._id), {
+        budgetId: String(matchingBudget._id),
         category: matchingBudget.category,
         customCategory: matchingBudget.customCategory,
         label: matchingBudget.label,
