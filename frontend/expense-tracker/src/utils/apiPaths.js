@@ -35,6 +35,14 @@ export const API_PATHS ={
     UPDATE: (budgetId) => `/api/v1/budget/${budgetId}`,
     DELETE: (budgetId) => `/api/v1/budget/${budgetId}`,
   },
+  NOTIFICATION: {
+    GET_ALL: "/api/v1/notifications",
+    GET_UNREAD_COUNT: "/api/v1/notifications/unread-count",
+    MARK_ALL_READ: "/api/v1/notifications/read-all",
+    CLEAR_READ: "/api/v1/notifications/clear",
+    MARK_READ: (notificationId) => `/api/v1/notifications/${notificationId}/read`,
+    DELETE: (notificationId) => `/api/v1/notifications/${notificationId}`,
+  },
   IMAGE: {
     UPLOAD_IMAGE: "/api/v1/auth/upload-image",
   },

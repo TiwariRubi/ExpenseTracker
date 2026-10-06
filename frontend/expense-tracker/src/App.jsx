@@ -11,12 +11,15 @@ import Home from "./pages/Dashboard/Home";
 import Income from "./pages/Dashboard/Income";
 import Expense from "./pages/Dashboard/Expense";
 import Budget from "./pages/Dashboard/Budget";
+import Notifications from "./pages/Dashboard/Notifications";
 import UserProvider from './context/UserContext';
+import { NotificationsProvider } from './hooks/useNotifications';
 import toast, {Toaster} from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 const App = () => { 
   return (
     <UserProvider>
+    <NotificationsProvider>
    <div>
      <Router>
        <SessionExpiryNotice />
@@ -40,6 +43,9 @@ const App = () => {
           <Route path="/budget" element={
             <ProtectedRoute><Budget /></ProtectedRoute>
           } />
+          <Route path="/notifications" element={
+            <ProtectedRoute><Notifications /></ProtectedRoute>
+          } />
 
        </Routes>
 
@@ -61,6 +67,7 @@ const App = () => {
    />
 
    
+    </NotificationsProvider>
    </UserProvider>
   );
 };

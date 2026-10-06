@@ -35,33 +35,6 @@ const Expense = () => {
       const[openAddExpenseModal, setOpenAddExpenseModal]=useState(false);
       const [expenseToEdit, setExpenseToEdit] = useState(null);
 
-      const showBudgetWarning = (budgetStatus) => {
-        const statuses = Array.isArray(budgetStatus)
-          ? budgetStatus
-          : budgetStatus
-            ? [budgetStatus]
-            : [];
-        const warnings = statuses.filter((status) =>
-          ["warning", "exceeded"].includes(status.level)
-        );
-        if (!warnings.length) return;
-
-        const message = warnings.map((status) =>
-          `${status.label || status.customCategory || status.category} is at ${Math.round(status.percentUsed)}% of its budget`
-        ).join("; ");
-
-        toast(message, {
-          icon: warnings.some((status) => status.level === "exceeded") ? "🚨" : "⚠️",
-          style: {
-            fontSize: "15px",
-            fontWeight: 600,
-            padding: "14px 18px",
-            border: "1px solid #f59e0b",
-            color: "#78350f",
-          },
-        });
-      };
-
     const handleSearchChange = (value) => {
       setSearchValue(value);
       clearTimeout(searchTimer.current);
@@ -170,16 +143,14 @@ const Expense = () => {
           icon,
           description,
         };
-        let response;
         if (expenseToEdit) {
-          response = await axiosInstance.put(
+          await axiosInstance.put(
             API_PATHS.EXPENSE.UPDATE_EXPENSE(expenseToEdit._id),
             expenseDetails
           );
         } else {
-          response = await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE, expenseDetails);
+          await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE, expenseDetails);
         }
-        showBudgetWarning(response.data?.budgetStatus);
         setOpenAddExpenseModal(false);
         setExpenseToEdit(null);
         toast.success(expenseToEdit ? "Expense updated successfully" : "Expense added successfully");
@@ -206,8 +177,7 @@ const Expense = () => {
      // Delete Expense
     const deleteExpense = async(id) => {
       try{
-         const response = await axiosInstance.delete(API_PATHS.EXPENSE.DELETE_EXPENSE(id));
-         showBudgetWarning(response.data?.budgetStatus);
+         await axiosInstance.delete(API_PATHS.EXPENSE.DELETE_EXPENSE(id));
         setOpenDeleteAlert({show: false, data:null});
         toast.success("Expense details deleted successfully");
         setRefreshData((previousValue) => previousValue + 1);

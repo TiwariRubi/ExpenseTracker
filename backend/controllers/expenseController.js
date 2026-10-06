@@ -4,7 +4,16 @@ const Expense = require("../models/Expense");
 const expenseCategories = require("../../shared/expenseCategories.json");
 const buildTransactionFilters = require("../utils/transactionFilters");
 const { checkBudgetAfterExpenseChange } = require("../utils/budgetStatus");
+const { notifyBudgetStatus } = require("../utils/notificationService");
 const categoryHelpers = import("../../shared/categoryHelpers.mjs");
+
+const notifyBudgetStatusSafely = async (userId, budgetStatus) => {
+  try {
+    await notifyBudgetStatus(userId, budgetStatus);
+  } catch (error) {
+    console.error("Error creating budget notifications:", error.message);
+  }
+};
 
 const getCustomCategory = (category, customCategory, normalizeCustomCategory) => {
   if (category !== "Other") {
@@ -63,6 +72,7 @@ exports.addExpense = async (req, res) => {
 
     await newExpense.save();
     const budgetStatus = await checkBudgetAfterExpenseChange(userId, newExpense);
+    await notifyBudgetStatusSafely(userId, budgetStatus);
     res.status(200).json({ ...newExpense.toObject(), budgetStatus });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -150,6 +160,7 @@ exports.updateExpense = async (req, res) => {
       previousExpense,
       expense,
     ]);
+    await notifyBudgetStatusSafely(userId, budgetStatus);
     res.status(200).json({ ...expense.toObject(), budgetStatus });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -219,6 +230,7 @@ exports.deleteExpense = async (req, res) => {
       return res.status(404).json({ message: "Expense not found" });
     }
     const budgetStatus = await checkBudgetAfterExpenseChange(userId, expense);
+    await notifyBudgetStatusSafely(userId, budgetStatus);
     res.json({ message:"Expense deleted successfully", budgetStatus });
    }catch(error){
     res.status(500).json({ message: "Server Error", error: error.message });

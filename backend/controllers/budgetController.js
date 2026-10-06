@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Budget = require("../models/Budget");
+const Notification = require("../models/Notification");
 const expenseCategories = require("../../shared/expenseCategories.json");
 const { getBudgetStatus } = require("../utils/budgetStatus");
 const categoryHelpers = import("../../shared/categoryHelpers.mjs");
@@ -134,6 +135,16 @@ exports.deleteBudget = async (req, res) => {
     });
     if (!budget) {
       return res.status(404).json({ message: "Budget not found" });
+    }
+
+    try {
+      await Notification.deleteMany({
+        userId: req.user.id,
+        isRead: false,
+        "meta.budgetId": String(budget._id),
+      });
+    } catch (error) {
+      console.error("Error deleting budget notifications:", error.message);
     }
 
     res.json({ message: "Budget deleted successfully" });
